@@ -1,6 +1,6 @@
-# B657 Assignment 1: Image Processing and Recognition Basics
+# MUSIC SHEET RECOGNIZER
 
-For running python file: ./omr.py < music image >
+For running python file: ./omr/omr.py < music image >
 
 ## 1. Convolution 
 ### Steps
