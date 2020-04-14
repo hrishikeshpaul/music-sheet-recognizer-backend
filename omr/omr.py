@@ -19,15 +19,16 @@ def main(request_image):
     template3_file = 'template3.png'
 
     # getting space and starting position parameter
+    socketio.emit('omr_event', {'data': 'Calculating Edge Matrix'})
     EdgeMatrix = EdgeDetection(request_image, self = False)
 
-    socketio.emit('omr_event', {'data': 'Edge Matrix Calculated'})
-
+    socketio.emit('omr_event', {'data': 'Calculating Hough Space'})
     space, starting_positions = get_staff_and_spacing_parameter(EdgeMatrix)
-    socketio.emit('omr_event', {'data': 'Hough Space Calculated'})
+
 
     # reading images and templates
     # im = Image.open(os.path.join(DATA_DIR, music_file),mode="r").convert('L')
+    socketio.emit('omr_event', {'data': 'Reading Templates'})
     im = request_image
     temp1 = Image.open(os.path.join(DATA_DIR,template1_file),mode="r").convert('L')
     temp2 = Image.open(os.path.join(DATA_DIR,template2_file),mode="r").convert('L')
