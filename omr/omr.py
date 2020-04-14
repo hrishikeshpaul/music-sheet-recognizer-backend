@@ -5,17 +5,12 @@ from omr.TemplateDetection import rescale_template, template_match, temp_positio
 from omr.NoteDetection import specify_notes
 from omr.HoughSpace import EdgeDetection, get_staff_and_spacing_parameter
 import pandas as pd
-
-# Importing flask module in the project is mandatory
-# An object of Flask class is our WSGI application.
-from flask import Flask
-
-# Flask constructor takes the name of
-# current module (__name__) as argument.
-app = Flask(__name__)
-
+from flask_socketio import SocketIO, emit
+from config import socketio
 
 def main(request_image):
+
+
     DATA_DIR  = 'omr/test-images/'
     # music_file = sys.argv[1]
     music_file = 'music1.png'
@@ -25,7 +20,11 @@ def main(request_image):
 
     # getting space and starting position parameter
     EdgeMatrix = EdgeDetection(request_image, self = False)
+
+    socketio.emit('omr_event', {'data': 'Edge Matrix Calculated'})
+
     space, starting_positions = get_staff_and_spacing_parameter(EdgeMatrix)
+    socketio.emit('omr_event', {'data': 'Hough Space Calculated'})
 
     # reading images and templates
     # im = Image.open(os.path.join(DATA_DIR, music_file),mode="r").convert('L')
@@ -39,6 +38,8 @@ def main(request_image):
     temp_array1 = np.array(temp1)
     temp_array2 = np.array(temp2)
     temp_array3 = np.array(temp3)
+
+    socketio.emit('omr_event', {'data': 'Rescaling Templates'})
 
     # scaling template from spacing parameter
     # for template1
@@ -77,6 +78,7 @@ def main(request_image):
     temp_scale2 = (temp_array_2 - temp_array_2.min())/(temp_array_2.max() - temp_array_2.min())
     temp_scale3 = (temp_array_3 - temp_array_3.min())/(temp_array_3.max() - temp_array_3.min())
 
+    socketio.emit('omr_event', {'data': 'Matching templates'})
     # matching template with image using hemming distance
     im_match1 = template_match(im_scale,temp_scale1)
     im_match2 = template_match(im_scale,temp_scale2)
@@ -95,7 +97,7 @@ def main(request_image):
     im_match3[im_match3 > 245] = 255
     im_match3[im_match3 <= 245] = 0
 
-
+    socketio.emit('omr_event', {'data': 'Normalizing Values'})
 
     # trimming last rows and columns for noise removal in resizing
     im_match_1 = np.delete(im_match1,np.s_[-5:], axis=1)
@@ -118,7 +120,7 @@ def main(request_image):
     x2, y2 = temp_position(im_match_2,temp_array_2.shape)
     x3, y3 = temp_position(im_match_3,temp_array_3.shape)
 
-
+    socketio.emit('omr_event', {'data': 'Calculating Confidence Scores'})
     # getting confidence score for each templates
     conf_temp1 = match1_count / (len(x1) * temp_array_1.shape[0] * temp_array_1.shape[1])
     conf_temp2 = match2_count / (len(x2) * temp_array_2.shape[0] * temp_array_2.shape[1])
@@ -138,7 +140,7 @@ def main(request_image):
         else:
             image_new[x1[i], y1[i]] = 255
 
-
+    socketio.emit('omr_event', {'data': 'Detecting Notes'})
     notes = specify_notes(space, starting_positions, image_new)
 
 
@@ -176,7 +178,7 @@ def main(request_image):
     convert_image = Image.fromarray(im)
     im1 = convert_image.convert('RGB')
 
-
+    socketio.emit('omr_event', {'data': 'Drawing on sheet'})
     # drawing rectangle and text over matched templates
     draw = ImageDraw.Draw(im1)
     for i in range(len(notes)):
@@ -208,27 +210,10 @@ def main(request_image):
     # return detect_temp.to_dict()
     # saving detected notes, quarter and eighth image file
     # im1.save(os.path.join(DATA_DIR, 'detected.png'))
+    socketio.emit('omr_event', {'data': 'Done'})
 
     return (im1, detect_temp.to_dict())
 
     # saving detected .txt file having row, col, height, width, symbol and confidence
     # detect_temp.to_csv(os.path.join(DATA_DIR, 'detected.txt'), header=False, index=False, sep='\t')
-
-
-# The route() function of the Flask class is a decorator,
-# which tells the application which URL should call
-# the associated function.
-@app.route('/')
-# ‘/’ URL is bound with hello_world() function.
-def hello_world():
-    im = main()
-    return im
-
-
-# main driver function
-if __name__ == '__main__':
-    # run() method of Flask class runs the application
-    # on the local development server.
-    app.run(debug=True)
-
 

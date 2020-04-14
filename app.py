@@ -1,6 +1,3 @@
-# from label import main
-
-from omr.omr import main
 from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS, cross_origin
 
@@ -8,15 +5,26 @@ import PIL.Image as Image
 import numpy as np
 import io
 import base64
+# from flask_socketio import SocketIO, emit
+
+import json
+
+from config import app, socketio
+
+# app = Flask(__name__)
+# socketio = SocketIO(app, cors_allowed_origins="*")
 
 
-app = Flask(__name__)
-CORS(app, support_credentials=True)
+@socketio.on('connect')
+def test_connect():
+    socketio.emit('my event', {'data': 'Connected'})
+    return {'hi': 'hi'}
 
 
 @app.route('/', methods=['POST', 'OPTIONS', 'GET'])
 @cross_origin(supports_credentials=True)
 def home():
+    from omr.omr import main
     req = request.get_json()['image']
 
     base64_decoded = base64.b64decode(req)
@@ -34,9 +42,19 @@ def home():
     rawBytes.seek(0)  # return to the start of the file
     img = base64.b64encode(rawBytes.read())
 
-    return img
+    obj = {
+        'image': img.decode('utf-8'),
+        'text': omr[1]
+    }
+
+    obj = json.dumps(obj)
+    return obj
     # return {"image": img, "txt": omr[1]}
 
 
 if __name__ == '__main__':
-    app.run(threaded=True, port=5000, debug=True)
+
+    CORS(app, support_credentials=True)
+    app.config['SECRET_KEY'] = 'secret!'
+    socketio.run(app, port=5000, debug=True)
+    # app.run(threaded=True, port=5000, debug=True)
