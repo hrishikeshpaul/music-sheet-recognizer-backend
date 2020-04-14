@@ -641,4 +641,4 @@ EdgeMatrix = EdgeDetection(os.path.join(DATA_DIR, music_file), self = False)
 
 - Results for test-images/music1.png:
 
-![detected.png](python-sample/detected.png)
+![detected.png](detected.png)
