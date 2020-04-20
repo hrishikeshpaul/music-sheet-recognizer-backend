@@ -213,7 +213,7 @@ def main(request_image):
     # im1.save(os.path.join(DATA_DIR, 'detected.png'))
     socketio.emit('omr_event', {'data': 'Done'})
 
-    return (im1, detect_temp.to_dict())
+    return (im1, detect_temp.to_csv())
 
     # saving detected .txt file having row, col, height, width, symbol and confidence
     # detect_temp.to_csv(os.path.join(DATA_DIR, 'detected.txt'), header=False, index=False, sep='\t')
