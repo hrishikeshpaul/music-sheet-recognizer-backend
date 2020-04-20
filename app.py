@@ -53,8 +53,6 @@ def home():
 
 
 if __name__ == '__main__':
-
-    CORS(app, support_credentials=True)
     app.config['SECRET_KEY'] = 'secret!'
     socketio.run(app, port=5000, debug=True)
     # app.run(threaded=True, port=5000, debug=True)
